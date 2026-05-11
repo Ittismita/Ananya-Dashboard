@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ITrack · TA–WFM Bridge Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #11151f;
+    --surface2: #161b28;
+    --surface3: #1c2231;
+    --border: #232a3a;
+    --border2: #2d3548;
+    --text: #e8eaf0;
+    --text2: #98a0b3;
+    --text3: #5a6378;
+    --text4: #3d4458;
+    --teal: #06b6d4;
+    --teal-dim: rgba(6,182,212,0.15);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.13);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.13);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.13);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.13);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.13);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.5; min-height: 100vh; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 38px; height: 38px; background: linear-gradient(135deg, var(--teal) 0%, #0891b2 50%, var(--purple) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: white; letter-spacing: -0.04em; box-shadow: 0 4px 16px rgba(6,182,212,0.3); position: relative; }
+  .brand-mark::after { content: ''; position: absolute; inset: 1px; border-radius: 9px; background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.15)); pointer-events: none; }
+  .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #98a0b3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: flex; align-items: center; }
+  .brand-text p { font-size: 10.5px; color: var(--text3); margin-top: 1px; }
+  .sample-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(245,158,11,0.13); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; font-size: 9.5px; font-weight: 700; color: var(--amber); letter-spacing: 0.06em; text-transform: uppercase; margin-left: 14px; }
+  .sample-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .top-meta { font-size: 10.5px; color: var(--text3); text-align: right; line-height: 1.3; }
+  .top-meta strong { color: var(--text2); font-weight: 600; }
+
+  .filter-bar { display: flex; align-items: center; gap: 10px; padding: 14px 28px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .filter-label { font-size: 10.5px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-right: 4px; display: flex; align-items: center; gap: 6px; }
+  .filter-label svg { width: 14px; height: 14px; }
+  .filter-select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 7px; padding: 7px 28px 7px 12px; font-size: 11.5px; font-weight: 500; font-family: inherit; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2398a0b3' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; transition: border 0.15s; min-width: 200px; }
+  .filter-select:focus { outline: none; border-color: var(--teal); }
+  .filter-select:hover { border-color: var(--border2); }
+  .filter-select.pu-filter { border-left: 3px solid var(--purple); }
+  .filter-select.du-filter { border-left: 3px solid var(--blue); }
+  .filter-clear { background: transparent; color: var(--text3); border: 1px solid var(--border); border-radius: 7px; padding: 7px 12px; font-size: 11.5px; font-weight: 500; cursor: pointer; font-family: inherit; margin-left: auto; }
+  .filter-clear:hover { color: var(--red); border-color: var(--red); }
+  .filter-result { font-size: 10.5px; color: var(--text3); font-weight: 500; }
+  .filter-result strong { color: var(--text); font-weight: 700; }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 22px 28px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .kpi { background: var(--surface2); border: 1px solid var(--border); border-radius: 11px; padding: 14px 18px; transition: all 0.2s; position: relative; }
+  .kpi:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .kpi-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; margin-bottom: 8px; }
+  .kpi-label { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.02em; }
+  .kpi-value .unit { font-size: 12px; font-weight: 500; color: var(--text3); margin-left: 3px; }
+  .kpi-trend { display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; margin-top: 8px; }
+  .kpi-trend.up { color: var(--green); }
+  .kpi-trend.dn { color: var(--red); }
+  .kpi-trend.flat { color: var(--text3); }
+  .kpi-static-tag { position: absolute; top: 14px; right: 14px; font-size: 9px; color: var(--text4); font-style: italic; }
+  .kpi.demand .kpi-icon { background: var(--teal-dim); color: var(--teal); }
+  .kpi.tat .kpi-icon { background: var(--blue-dim); color: var(--blue); }
+  .kpi.aging .kpi-icon { background: var(--amber-dim); color: var(--amber); }
+  .kpi.atrisk .kpi-icon { background: var(--red-dim); color: var(--red); }
+
+  .main { display: grid; grid-template-columns: 1fr 380px; gap: 16px; padding: 22px 28px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; overflow: hidden; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .panel-title { font-size: 12px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .panel-title .count { background: var(--surface3); color: var(--text2); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
+  .mini-select { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 24px 4px 10px; font-size: 10.5px; font-weight: 500; font-family: inherit; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2398a0b3' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 8px center; }
+  .mini-select:focus { outline: none; border-color: var(--teal); }
+
+  .demand-list { max-height: 580px; overflow-y: auto; }
+  .demand-list::-webkit-scrollbar { width: 6px; }
+  .demand-list::-webkit-scrollbar-track { background: transparent; }
+  .demand-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .demand-row { display: grid; grid-template-columns: 95px 95px 1fr 100px 130px 60px 24px; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; align-items: center; }
+  .demand-row.header { background: var(--surface2); cursor: default; padding: 8px 18px; font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .demand-row:not(.header):hover { background: var(--surface2); }
+  .demand-row.expanded { background: var(--surface2); }
+  .id-jr { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--teal); font-weight: 700; }
+  .id-rr { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--purple); font-weight: 600; }
+  .id-rr-label { font-size: 8.5px; color: var(--text4); margin-right: 3px; letter-spacing: 0.05em; font-weight: 700; }
+  .demand-role { font-weight: 600; color: var(--text); font-size: 12.5px; }
+  .demand-skills { font-size: 10.5px; color: var(--text3); margin-top: 2px; }
+  .pipeline-bar { display: flex; height: 22px; border-radius: 5px; overflow: hidden; background: var(--surface3); font-size: 9.5px; font-weight: 700; color: white; }
+  .pipeline-seg { display: flex; align-items: center; justify-content: center; min-width: 18px; transition: filter 0.15s; }
+  .pipeline-seg:hover { filter: brightness(1.2); }
+  .pipeline-seg.proposed { background: #475569; }
+  .pipeline-seg.l1 { background: #0891b2; }
+  .pipeline-seg.l2ci { background: #7c3aed; }
+  .pipeline-seg.allocated { background: #16a34a; }
+  .demand-type { display: inline-flex; padding: 3px 9px; border-radius: 10px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+  .type-reactive { background: rgba(239,68,68,0.13); color: var(--red); }
+  .type-proactive { background: rgba(16,185,129,0.13); color: var(--green); }
+  .age-cell { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; }
+  .age-cell.warning { color: var(--amber); }
+  .age-cell.danger { color: var(--red); }
+  .row-arrow { color: var(--text4); font-size: 14px; transition: transform 0.2s; }
+  .demand-row.expanded .row-arrow { transform: rotate(90deg); color: var(--teal); }
+
+  .drilldown { display: none; background: var(--bg); border-bottom: 1px solid var(--border); padding: 18px 22px 22px 115px; }
+  .demand-row.expanded + .drilldown { display: block; }
+  .drill-section { margin-bottom: 18px; }
+  .drill-label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 8px; }
+
+  .demand-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; font-size: 11.5px; margin-bottom: 6px; }
+  .demand-detail-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .demand-detail-label { color: var(--text3); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; margin-bottom: 4px; }
+  .demand-detail-value { color: var(--text); font-weight: 700; font-size: 12.5px; }
+
+  .jr-pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+  .jr-stage { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; position: relative; }
+  .jr-stage::after { content: ''; position: absolute; top: 50%; right: -8px; transform: translateY(-50%); width: 0; height: 0; border-left: 7px solid var(--border2); border-top: 7px solid transparent; border-bottom: 7px solid transparent; z-index: 1; }
+  .jr-stage:last-child::after { display: none; }
+  .jr-stage.proposed { border-left: 3px solid #475569; }
+  .jr-stage.l1 { border-left: 3px solid #0891b2; }
+  .jr-stage.l2ci { border-left: 3px solid #7c3aed; }
+  .jr-stage.allocated { border-left: 3px solid #16a34a; }
+  .jr-stage-label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 6px; }
+  .jr-stage-count { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.02em; }
+  .jr-stage-count .unit { font-size: 10px; color: var(--text3); font-weight: 500; margin-left: 4px; }
+
+  .cand-table { width: 100%; border-collapse: collapse; }
+  .cand-table th { text-align: left; font-size: 9.5px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  .cand-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 11px; }
+  .cand-name { font-weight: 600; color: var(--text); }
+  .cand-source { color: var(--text3); font-size: 10px; }
+  .stage-pill { display: inline-block; padding: 2px 7px; border-radius: 8px; font-size: 9.5px; font-weight: 700; }
+  .stage-proposed { background: #334155; color: #cbd5e1; }
+  .stage-l1 { background: rgba(8,145,178,0.18); color: #22d3ee; }
+  .stage-l2ci { background: rgba(124,58,237,0.18); color: #c4b5fd; }
+  .stage-allocated { background: rgba(22,163,74,0.18); color: #86efac; }
+  .stage-rejected { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+  .comments-feed { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 14px; }
+  .comment { display: flex; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .comment:last-of-type { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #475569, #334155); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+  .avatar.wfm { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+  .avatar.ta { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+  .comment-body { flex: 1; }
+  .comment-meta { display: flex; align-items: center; gap: 8px; font-size: 10.5px; margin-bottom: 3px; }
+  .comment-meta .name { font-weight: 700; color: var(--text); }
+  .comment-meta .role-tag { padding: 1px 6px; border-radius: 7px; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .role-tag.wfm { background: var(--purple-dim); color: var(--purple); }
+  .role-tag.ta { background: var(--blue-dim); color: var(--blue); }
+  .comment-meta .time { color: var(--text3); font-size: 10px; }
+  .comment-text { color: var(--text2); font-size: 11.5px; line-height: 1.55; }
+  .comment-input-row { display: flex; gap: 8px; margin-top: 10px; }
+  .comment-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-size: 11.5px; font-family: inherit; }
+  .comment-input:focus { outline: none; border-color: var(--teal); }
+  .send-btn { background: var(--teal); color: white; border: none; border-radius: 7px; padding: 0 14px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+  .widget { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 18px; margin-bottom: 16px; }
+  .widget-title { font-size: 11.5px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .widget-title .pill { font-size: 9.5px; padding: 2px 8px; border-radius: 10px; background: var(--red-dim); color: var(--red); font-weight: 700; letter-spacing: 0.04em; }
+
+  .aging-bar { margin-bottom: 11px; }
+  .aging-bar:last-child { margin-bottom: 0; }
+  .aging-bar-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+  .aging-bar-top span:first-child { color: var(--text2); font-weight: 500; }
+  .aging-bar-top span:last-child { color: var(--text); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .aging-bar-track { height: 7px; background: var(--surface3); border-radius: 4px; overflow: hidden; }
+  .aging-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  .funnel { display: flex; flex-direction: column; gap: 4px; }
+  .funnel-row { display: flex; align-items: center; gap: 10px; }
+  .funnel-label { font-size: 10.5px; color: var(--text2); width: 70px; text-align: right; font-weight: 500; }
+  .funnel-bar { flex: 1; background: var(--surface3); border-radius: 4px; overflow: hidden; height: 24px; }
+  .funnel-fill { height: 100%; display: flex; align-items: center; padding: 0 8px; color: white; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  .activity-list { max-height: 240px; overflow-y: auto; }
+  .activity-list::-webkit-scrollbar { width: 4px; }
+  .activity-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .activity-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .activity-dot.green { background: var(--green); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+  .activity-dot.amber { background: var(--amber); }
+  .activity-dot.red { background: var(--red); }
+  .activity-dot.blue { background: var(--blue); }
+  .activity-text { color: var(--text2); flex: 1; line-height: 1.45; }
+  .activity-text strong { color: var(--text); font-weight: 600; }
+  .activity-time { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .activity-empty { color: var(--text3); font-size: 11px; text-align: center; padding: 20px 10px; font-style: italic; }
+
+  .chart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 18px; }
+  .bar-chart { display: flex; gap: 14px; align-items: flex-end; height: 160px; padding: 14px 4px 0; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar-stack { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 5px; overflow: hidden; min-height: 30px; }
+  .bar-piece { transition: filter 0.15s; }
+  .bar-piece:hover { filter: brightness(1.25); }
+  .bar-label { font-size: 10px; color: var(--text3); font-weight: 600; text-align: center; }
+  .chart-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 10.5px; color: var(--text2); margin-top: 12px; }
+  .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
+  .footer-note { text-align: center; padding: 18px; font-size: 10.5px; color: var(--text4); border-top: 1px solid var(--border); margin-top: 8px; }
+
+  .edit-toolbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .toolbar-btn { background: var(--surface3); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 5px 11px; font-size: 10.5px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; }
+  .toolbar-btn:hover { color: var(--text); border-color: var(--border2); }
+  .toolbar-btn.primary { background: var(--teal-dim); color: var(--teal); border-color: rgba(6,182,212,0.3); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px; }
+  .empty-state .icon { font-size: 32px; margin-bottom: 10px; opacity: 0.5; }
+
+  @media (max-width: 1280px) {
+    .main { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .demand-row { grid-template-columns: 80px 1fr 80px 80px 24px; }
+    .demand-row > :nth-child(2), .demand-row > :nth-child(5), .demand-row > :nth-child(6) { display: none; }
+    .demand-details { grid-template-columns: repeat(2, 1fr); }
+    .jr-pipeline { grid-template-columns: repeat(2, 1fr); }
+    .jr-stage::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">iT</div>
+    <div class="brand-text">
+      <h1>ITrack <span class="sample-tag">Sample Data</span></h1>
+      <p>The TA–WFM Bridge · LTIMindtree · Talent Solutions</p>
+    </div>
+  </div>
+  <div class="top-meta">
+    <strong>Talent Solutions Team</strong> · Shared Workspace<br>
+    Last sync: <strong>2 min ago</strong> · Auto-refresh ON
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    Filter by:
+  </span>
+  <select class="filter-select pu-filter" id="filterPU" onchange="applyFilters()">
+    <option value="">All Practice Units (PU) — Skill Pool</option>
+  </select>
+  <select class="filter-select du-filter" id="filterDU" onchange="applyFilters()">
+    <option value="">All Delivery Units (DU) — Sector Pool</option>
+  </select>
+  <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
+  <span class="filter-result" id="filterResult"></span>
+</div>
+
+<div class="kpi-strip">
+  <div class="kpi demand">
+    <span class="kpi-static-tag">Org-wide</span>
+    <div class="kpi-icon">📋</div>
+    <div class="kpi-label">Open Demands</div>
+    <div class="kpi-value" id="kpiTotal">75<span class="unit">total</span></div>
+    <div class="kpi-trend up">▲ 8 vs last week</div>
+  </div>
+  <div class="kpi tat">
+    <span class="kpi-static-tag">Org-wide</span>
+    <div class="kpi-icon">⏱</div>
+    <div class="kpi-label">TAT for TA</div>
+    <div class="kpi-value">26<span class="unit">days</span></div>
+    <div class="kpi-trend up">▼ 4 days vs last month</div>
+  </div>
+  <div class="kpi aging">
+    <span class="kpi-static-tag">Org-wide</span>
+    <div class="kpi-icon">⚠</div>
+    <div class="kpi-label">Aging > 60 Days</div>
+    <div class="kpi-value" id="kpiAging">12<span class="unit">demands</span></div>
+    <div class="kpi-trend dn">▲ 3 vs last week</div>
+  </div>
+  <div class="kpi atrisk">
+    <span class="kpi-static-tag">Org-wide</span>
+    <div class="kpi-icon">🚨</div>
+    <div class="kpi-label">At Risk Demands</div>
+    <div class="kpi-value" id="kpiAtRisk">18<span class="unit">demands</span></div>
+    <div class="kpi-trend flat">No change</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        Open Demands & Pipeline
+        <span class="count" id="visibleCount">75</span>
+      </div>
+    </div>
+    <div class="demand-list" id="demandList"></div>
+  </div>
+
+  <div>
+    <div class="widget">
+      <div class="widget-title">
+        Demand Aging Buckets
+        <span class="pill">12 OVER 60 DAYS</span>
+      </div>
+      <div class="aging-bar"><div class="aging-bar-top"><span>0–30 days</span><span>42</span></div><div class="aging-bar-track"><div class="aging-bar-fill" style="width:56%;background:var(--green)"></div></div></div>
+      <div class="aging-bar"><div class="aging-bar-top"><span>30–60 days</span><span>21</span></div><div class="aging-bar-track"><div class="aging-bar-fill" style="width:28%;background:var(--blue)"></div></div></div>
+      <div class="aging-bar"><div class="aging-bar-top"><span>60–90 days &#9888;</span><span>8</span></div><div class="aging-bar-track"><div class="aging-bar-fill" style="width:11%;background:var(--amber)"></div></div></div>
+      <div class="aging-bar"><div class="aging-bar-top"><span>90+ days &#9888;&#9888;</span><span>4</span></div><div class="aging-bar-track"><div class="aging-bar-fill" style="width:5%;background:var(--red)"></div></div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);font-style:italic;">Threshold: anything 60+ days is flagged as <strong style="color:var(--amber)">Aging / At Risk</strong></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">
+        <span>Live Activity Feed</span>
+        <select class="mini-select" id="activityJRFilter" onchange="renderActivity()" style="max-width:140px">
+          <option value="">All JRs</option>
+        </select>
+      </div>
+      <div class="activity-list" id="activityList"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">Sourcing Channel Mix</div>
+      <div class="funnel">
+        <div class="funnel-row"><div class="funnel-label">Internal</div><div class="funnel-bar"><div class="funnel-fill" style="width:38%;background:linear-gradient(90deg,#a78bfa,#7c3aed)">38%</div></div></div>
+        <div class="funnel-row"><div class="funnel-label">Referrals</div><div class="funnel-bar"><div class="funnel-fill" style="width:24%;background:linear-gradient(90deg,#60a5fa,#2563eb)">24%</div></div></div>
+        <div class="funnel-row"><div class="funnel-label">Naukri</div><div class="funnel-bar"><div class="funnel-fill" style="width:18%;background:linear-gradient(90deg,#06b6d4,#0891b2)">18%</div></div></div>
+        <div class="funnel-row"><div class="funnel-label">LinkedIn</div><div class="funnel-bar"><div class="funnel-fill" style="width:12%;background:linear-gradient(90deg,#10b981,#059669)">12%</div></div></div>
+        <div class="funnel-row"><div class="funnel-label">Vendors</div><div class="funnel-bar"><div class="funnel-fill" style="width:8%;background:linear-gradient(90deg,#f59e0b,#d97706)">8%</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main" style="padding-top:0">
+  <div class="chart-panel">
+    <div class="widget-title">
+      <span>Pipeline Stage Distribution</span>
+      <select class="mini-select" id="pipelineBUFilter" onchange="renderPipelineChart()" style="max-width:170px">
+        <option value="">All Business Units</option>
+      </select>
+    </div>
+    <div class="bar-chart" id="pipelineBars"></div>
+    <div id="pipelineSummary" style="font-size:10.5px;color:var(--text3);font-weight:500;text-align:right;margin-top:6px"></div>
+  </div>
+
+  <div class="chart-panel">
+    <div class="widget-title">Open Demands by Practice Unit</div>
+    <div class="bar-chart">
+      <div class="bar-col"><div class="bar-stack" style="height:85%"><div class="bar-piece" style="background:#0891b2;height:55%"></div><div class="bar-piece" style="background:#7c3aed;height:30%"></div><div class="bar-piece" style="background:#f59e0b;height:15%"></div></div><div class="bar-label">Cloud<br><strong style="color:var(--text);font-size:11.5px">15</strong></div></div>
+      <div class="bar-col"><div class="bar-stack" style="height:85%"><div class="bar-piece" style="background:#0891b2;height:50%"></div><div class="bar-piece" style="background:#7c3aed;height:35%"></div><div class="bar-piece" style="background:#f59e0b;height:15%"></div></div><div class="bar-label">Data &amp; AI<br><strong style="color:var(--text);font-size:11.5px">15</strong></div></div>
+      <div class="bar-col"><div class="bar-stack" style="height:85%"><div class="bar-piece" style="background:#0891b2;height:60%"></div><div class="bar-piece" style="background:#7c3aed;height:25%"></div><div class="bar-piece" style="background:#f59e0b;height:15%"></div></div><div class="bar-label">Digital Eng<br><strong style="color:var(--text);font-size:11.5px">15</strong></div></div>
+      <div class="bar-col"><div class="bar-stack" style="height:85%"><div class="bar-piece" style="background:#0891b2;height:55%"></div><div class="bar-piece" style="background:#7c3aed;height:35%"></div><div class="bar-piece" style="background:#f59e0b;height:10%"></div></div><div class="bar-label">SAP / ERP<br><strong style="color:var(--text);font-size:11.5px">15</strong></div></div>
+      <div class="bar-col"><div class="bar-stack" style="height:85%"><div class="bar-piece" style="background:#0891b2;height:65%"></div><div class="bar-piece" style="background:#7c3aed;height:25%"></div><div class="bar-piece" style="background:#f59e0b;height:10%"></div></div><div class="bar-label">QE &amp; Test<br><strong style="color:var(--text);font-size:11.5px">15</strong></div></div>
+    </div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#0891b2"></span>Sourcing</span>
+      <span><span class="legend-dot" style="background:#7c3aed"></span>In Interview</span>
+      <span><span class="legend-dot" style="background:#f59e0b"></span>Aging &gt; 60d</span>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  ITrack · Sample data for demonstration · Real implementation will pull from RippleHire (TA) + IFULFIL/IMANAGE (WFM) via scheduled API sync · Phase 1 MVP
+</div>
+
+<script>
+// ─── DATA GENERATION ───
+// 5 PUs × 5 DUs = 25 combinations × 3 JRs = 75 JRs
+// Every PU × DU combo gets 3 JRs to populate the dashboard fully
+
+const PUS = ["Cloud", "Data & AI", "Digital Eng", "SAP / ERP", "QE & Test"];
+const DUS = ["BFSI", "Telco", "Retail", "Manufacturing", "Insurance"];
+
+// Role templates by PU
+const roleTemplates = {
+  "Cloud": [
+    { role: "Senior Cloud Engineer", skills: "AWS, Terraform, Kubernetes, CI/CD" },
+    { role: "Cloud Solution Architect", skills: "AWS, Azure, Networking, Security" },
+    { role: "DevOps Lead", skills: "Jenkins, Docker, Helm, GitOps" },
+    { role: "Site Reliability Engineer", skills: "Linux, Observability, Prometheus, K8s" },
+  ],
+  "Data & AI": [
+    { role: "Data Engineer (Databricks)", skills: "PySpark, Databricks, Delta Lake, Airflow" },
+    { role: "ML Engineer", skills: "Python, TensorFlow, MLOps, Kubeflow" },
+    { role: "Data Architect", skills: "Snowflake, Data Modeling, ETL Design" },
+    { role: "Senior Data Scientist", skills: "Python, R, NLP, Statistical Modeling" },
+  ],
+  "Digital Eng": [
+    { role: "Full Stack Developer", skills: "React, Node.js, MongoDB, REST APIs" },
+    { role: "ServiceNow Developer", skills: "ServiceNow, ITSM, Scripting" },
+    { role: "Senior Java Developer", skills: "Java 17, Spring Boot, Microservices" },
+    { role: "Mobile App Developer", skills: "React Native, iOS, Android" },
+  ],
+  "SAP / ERP": [
+    { role: "SAP S/4HANA FI Consultant", skills: "S/4HANA, FI, CO, Integration" },
+    { role: "SAP MM Consultant", skills: "SAP MM, Procurement, Inventory" },
+    { role: "SAP SD Functional Lead", skills: "SAP SD, Order-to-Cash, Pricing" },
+    { role: "SAP Basis Administrator", skills: "SAP Basis, HANA, OS/DB Migration" },
+  ],
+  "QE & Test": [
+    { role: "QA Automation Lead", skills: "Selenium, TestNG, CI/CD, API testing" },
+    { role: "Performance Test Engineer", skills: "JMeter, LoadRunner, Performance Tuning" },
+    { role: "Test Architect", skills: "Test Strategy, Automation Frameworks" },
+    { role: "Mobile Test Engineer", skills: "Appium, Espresso, XCUITest" },
+  ]
+};
+
+// Candidate names for variety
+const candidateNames = [
+  "Rajesh Kumar", "Anita Verma", "Vikram Shah", "Pooja Nair", "Karan Mehta",
+  "Sandeep Iyer", "Meera Pillai", "Rohan Gupta", "Arjun Reddy", "Shreya Bose",
+  "Manoj Sinha", "Hardik Shah", "Priya Joshi", "Aakash Patel", "Divya Menon",
+  "Nikhil Rao", "Kavya Krishnan", "Aditya Bhatt", "Ria Saxena", "Tarun Malhotra",
+  "Neha Agarwal", "Suresh Babu", "Lakshmi Pillai", "Rakesh Yadav", "Sneha Kapoor",
+  "Varun Khanna", "Aishwarya Iyer", "Mohit Sharma", "Pallavi Singh", "Deepak Joshi"
+];
+
+const sources = ["Naukri", "LinkedIn", "Referral", "Vendor", "Internal"];
+
+// Note templates per stage
+const stageNotes = {
+  proposed: ["Awaiting interview slot", "Profile shared with BU", "Initial screening done", "Shortlisted by recruiter", "JD shared, awaiting response"],
+  l1: ["L1 scheduled", "Cleared screening", "L1 feedback awaited", "Strong technical fit", "L1 cleared, awaiting L2 slot"],
+  l2ci: ["Awaiting client interview", "L2 cleared, CI pending", "Client interview scheduled", "Strong fit, awaiting feedback", "L2 done — positive feedback"],
+  allocated: ["Offer accepted; joining confirmed", "Offer rolled out, awaiting acceptance", "Onboarding in progress", "Joining confirmed"],
+  rejected: ["Did not clear technical", "Not aligned to JD", "Got higher counter from current employer", "Withdrew application", "Dropped at offer stage"]
+};
+
+// Commenter pool
+const wfmFolks = ["Rohit K.", "Suman R.", "Kavita L.", "Asha N.", "Manish G.", "Deepak J."];
+const taFolks = ["Priya M.", "Amit S.", "Neha T.", "Vikash B.", "Kiran D.", "Sara P."];
+
+// Comment templates
+const commentTemplates = [
+  { role: "wfm", text: "Need to know if the offer is accepted. Project starts soon." },
+  { role: "ta", text: "Candidate confirmed verbal acceptance. Documentation in progress." },
+  { role: "wfm", text: "Can we accelerate this? Demand is critical." },
+  { role: "ta", text: "Engaged 3 vendors. Niche skill so candidate flow is slow." },
+  { role: "wfm", text: "Any movement on the offer side?" },
+  { role: "ta", text: "Counter-offer being reviewed by HR. Update tomorrow." },
+  { role: "wfm", text: "Bench check done — 1 partial match. Need external hires." },
+  { role: "ta", text: "L2 scheduled tomorrow with hiring manager." },
+];
+
+// Deterministic pseudo-random based on seed for reproducible data
+function seedRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function generateDemands() {
+  const demands = [];
+  let jrCounter = 2300;
+  let rrCounter = 900;
+  let candCounter = 0;
+
+  PUS.forEach((pu, puIdx) => {
+    DUS.forEach((du, duIdx) => {
+      const seed = (puIdx + 1) * 137 + (duIdx + 1) * 53;
+      const rand = seedRandom(seed);
+      const numJRs = 3; // 3 per combination = 75 total
+      const roles = roleTemplates[pu];
+
+      for (let i = 0; i < numJRs; i++) {
+        jrCounter += Math.floor(rand() * 4) + 2;
+        rrCounter += Math.floor(rand() * 3) + 2;
+        const roleIdx = Math.floor(rand() * roles.length);
+        const role = roles[roleIdx];
+
+        // Age — distribute: most 0-30, some 30-60, fewer 60+
+        const ageRoll = rand();
+        let age, ageClass = "";
+        if (ageRoll < 0.55) { age = Math.floor(rand() * 30) + 1; ageClass = ""; }
+        else if (ageRoll < 0.83) { age = Math.floor(rand() * 30) + 30; ageClass = ""; }
+        else if (ageRoll < 0.95) { age = Math.floor(rand() * 30) + 60; ageClass = "warning"; }
+        else { age = Math.floor(rand() * 30) + 90; ageClass = "danger"; }
+
+        // Type
+        const type = rand() < 0.7 ? "Reactive" : "Proactive";
+
+        // Pipeline (more advanced for older JRs)
+        const ageFactor = Math.min(age / 30, 3);
+        const proposed = Math.floor(rand() * 6) + Math.floor(2 + ageFactor);
+        const l1 = Math.floor(rand() * Math.max(proposed - 1, 1));
+        const l2ci = Math.floor(rand() * Math.max(l1, 1));
+        const allocated = age > 20 && rand() < 0.4 ? 1 : 0;
+
+        // Generate candidates matching pipeline counts
+        const cands = [];
+        const totalCands = proposed + l1 + l2ci + allocated + (rand() < 0.3 ? 1 : 0);
+        for (let c = 0; c < Math.min(totalCands, 8); c++) {
+          const name = candidateNames[(candCounter++) % candidateNames.length];
+          const source = sources[Math.floor(rand() * sources.length)];
+          let stage, stageLabel;
+          if (c < allocated) { stage = "allocated"; stageLabel = "Allocated"; }
+          else if (c < allocated + l2ci) { stage = "l2ci"; stageLabel = "L2/CI"; }
+          else if (c < allocated + l2ci + l1) { stage = "l1"; stageLabel = "L1"; }
+          else if (c < allocated + l2ci + l1 + proposed) { stage = "proposed"; stageLabel = "Proposed"; }
+          else { stage = "rejected"; stageLabel = "Rejected"; }
+
+          const notes = stageNotes[stage];
+          const note = notes[Math.floor(rand() * notes.length)];
+
+          let joinedDt = "—";
+          if (stage === "allocated") {
+            const days = Math.floor(rand() * 20) + 5;
+            joinedDt = days + " May";
+          }
+
+          cands.push({ name, source, stage, stageLabel, joinedDt, note });
+        }
+
+        // Comments — 1-3 random
+        const numComments = Math.floor(rand() * 3) + (age > 30 ? 1 : 0);
+        const comments = [];
+        for (let cm = 0; cm < numComments; cm++) {
+          const tpl = commentTemplates[Math.floor(rand() * commentTemplates.length)];
+          const folks = tpl.role === "wfm" ? wfmFolks : taFolks;
+          const author = folks[Math.floor(rand() * folks.length)];
+          const timeAgo = ["1 hr ago", "3 hrs ago", "yesterday", "2 days ago", "6 hrs ago"][Math.floor(rand() * 5)];
+          comments.push({ author, role: tpl.role, time: timeAgo, text: tpl.text });
+        }
+        if (age > 60) {
+          comments.push({ author: "System", role: "ta", time: "1 hr ago", text: "Auto-flagged: aging " + age + " days — beyond 60-day threshold." });
+        }
+
+        demands.push({
+          id: "JR-" + jrCounter,
+          rrId: "RR-" + rrCounter,
+          role: role.role,
+          skills: role.skills,
+          age,
+          ageClass,
+          pipeline: { proposed, l1, l2ci, allocated },
+          pu, du,
+          positions: 1,
+          type,
+          candidates: cands,
+          comments
+        });
+      }
+    });
+  });
+
+  return demands;
+}
+
+const demands = generateDemands();
+
+// Activity feed — generated to reference real JR IDs in the demands list
+const activityFeed = (function() {
+  const items = [];
+  // Pick ~30 random JRs to have activity
+  const sample = [...demands].sort(() => 0.5 - Math.random()).slice(0, 30);
+  const dots = ["green", "blue", "amber", "red"];
+  const templates = [
+    (jr) => ({ dot:"green", text:"<strong>TA · Priya M.</strong> moved 2 candidates to L1 on <strong>" + jr + "</strong>", time:"5 min ago" }),
+    (jr) => ({ dot:"blue", text:"<strong>WFM · Rohit K.</strong> raised new demand <strong>" + jr + "</strong>", time:"22 min ago" }),
+    (jr) => ({ dot:"amber", text:"Auto-flag: <strong>" + jr + "</strong> aging beyond 60-day threshold", time:"1 hr ago" }),
+    (jr) => ({ dot:"green", text:"<strong>TA · Vikash B.</strong> closed <strong>" + jr + "</strong> · offer accepted", time:"2 hrs ago" }),
+    (jr) => ({ dot:"red", text:"<strong>" + jr + "</strong> · candidate dropped at offer stage", time:"3 hrs ago" }),
+    (jr) => ({ dot:"blue", text:"<strong>WFM · Suman R.</strong> commented on <strong>" + jr + "</strong>", time:"4 hrs ago" }),
+    (jr) => ({ dot:"green", text:"<strong>TA · Neha T.</strong> scheduled L2/CI on <strong>" + jr + "</strong>", time:"1 day ago" }),
+    (jr) => ({ dot:"amber", text:"<strong>WFM</strong> escalated <strong>" + jr + "</strong> for vendor channel", time:"1 day ago" }),
+  ];
+  sample.forEach((d, i) => {
+    const tpl = templates[i % templates.length];
+    const item = tpl(d.id);
+    item.jr = d.id;
+    items.push(item);
+  });
+  return items;
+})();
+
+let filtered = [...demands];
+
+function populateFilters() {
+  const puSel = document.getElementById('filterPU');
+  PUS.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; puSel.appendChild(o); });
+  const duSel = document.getElementById('filterDU');
+  DUS.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; duSel.appendChild(o); });
+  const pipBU = document.getElementById('pipelineBUFilter');
+  PUS.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; pipBU.appendChild(o); });
+}
+
+function applyFilters() {
+  const puVal = document.getElementById('filterPU').value;
+  const duVal = document.getElementById('filterDU').value;
+  filtered = demands.filter(d => {
+    if (puVal && d.pu !== puVal) return false;
+    if (duVal && d.du !== duVal) return false;
+    return true;
+  });
+  renderDemands();
+  populateActivityJRFilter();
+  renderActivity();
+  document.getElementById('visibleCount').textContent = filtered.length;
+  const fr = document.getElementById('filterResult');
+  fr.innerHTML = filtered.length === demands.length ? '' : '<strong>' + filtered.length + '</strong> of ' + demands.length + ' demands shown';
+}
+
+function clearFilters() {
+  document.getElementById('filterPU').value = '';
+  document.getElementById('filterDU').value = '';
+  document.getElementById('activityJRFilter').value = '';
+  applyFilters();
+}
+
+function populateActivityJRFilter() {
+  const sel = document.getElementById('activityJRFilter');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">All JRs</option>';
+  // Only show JRs that have activity AND are in the current filtered set
+  const filteredIds = new Set(filtered.map(d => d.id));
+  const jrsWithActivity = [...new Set(activityFeed.filter(a => filteredIds.has(a.jr)).map(a => a.jr))];
+  jrsWithActivity.sort().forEach(jrId => {
+    const o = document.createElement('option');
+    o.value = jrId; o.textContent = jrId;
+    sel.appendChild(o);
+  });
+  if (currentVal && jrsWithActivity.includes(currentVal)) sel.value = currentVal;
+  else sel.value = '';
+}
+
+function renderActivity() {
+  const list = document.getElementById('activityList');
+  const jrFilter = document.getElementById('activityJRFilter').value;
+  const visibleJRIds = new Set(filtered.map(d => d.id));
+  let items = activityFeed.filter(a => visibleJRIds.has(a.jr));
+  if (jrFilter) items = items.filter(a => a.jr === jrFilter);
+  if (items.length === 0) { list.innerHTML = '<div class="activity-empty">No activity for the selected filter.</div>'; return; }
+  list.innerHTML = items.slice(0, 12).map(a =>
+    '<div class="activity-item"><div class="activity-dot ' + a.dot + '"></div><div><div class="activity-text">' + a.text + '</div><div class="activity-time">' + a.time + '</div></div></div>'
+  ).join('');
+}
+
+function renderPipelineChart() {
+  const buFilter = document.getElementById('pipelineBUFilter').value;
+  const set = buFilter ? demands.filter(d => d.pu === buFilter) : demands;
+  let totals = {proposed:0, l1:0, l2ci:0, allocated:0};
+  set.forEach(d => {
+    totals.proposed += d.pipeline.proposed;
+    totals.l1 += d.pipeline.l1;
+    totals.l2ci += d.pipeline.l2ci;
+    totals.allocated += d.pipeline.allocated;
+  });
+  const total = totals.proposed + totals.l1 + totals.l2ci + totals.allocated;
+  const max = Math.max(totals.proposed, totals.l1, totals.l2ci, totals.allocated, 1);
+  const stages = [
+    {label:"Proposed", color:"#475569", val:totals.proposed},
+    {label:"L1", color:"#0891b2", val:totals.l1},
+    {label:"L2 / CI", color:"#7c3aed", val:totals.l2ci},
+    {label:"Allocated", color:"#16a34a", val:totals.allocated}
+  ];
+  const bars = document.getElementById('pipelineBars');
+  bars.innerHTML = stages.map(s => {
+    const heightPct = Math.max((s.val / max) * 100, s.val === 0 ? 5 : 18);
+    return '<div class="bar-col"><div class="bar-stack" style="height:' + heightPct + '%"><div class="bar-piece" style="background:' + s.color + ';height:100%"></div></div><div class="bar-label">' + s.label + '<br><strong style="color:var(--text);font-size:11.5px">' + s.val + '</strong></div></div>';
+  }).join('');
+  document.getElementById('pipelineSummary').textContent = total + ' candidates total' + (buFilter ? ' · ' + buFilter + ' PU' : ' · all BUs');
+}
+
+function renderDemands() {
+  const list = document.getElementById('demandList');
+  const headerHTML = '<div class="demand-row header"><div>JR ID</div><div>RR ID</div><div>ROLE / SKILLS</div><div>TYPE</div><div>PIPELINE</div><div>AGE</div><div></div></div>';
+  if (filtered.length === 0) {
+    list.innerHTML = headerHTML + '<div class="empty-state"><div class="icon">🔍</div>No demands match your current filters.<br><span style="font-size:10.5px;margin-top:6px;display:inline-block;color:var(--text4)">Try clearing filters to see all demands.</span></div>';
+    return;
+  }
+  let html = headerHTML;
+  filtered.forEach(d => {
+    const idx = demands.indexOf(d);
+    const total = d.pipeline.proposed + d.pipeline.l1 + d.pipeline.l2ci + d.pipeline.allocated;
+    const segs = total === 0
+      ? '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text4);font-size:10px;font-weight:500">No candidates yet</div>'
+      : [
+          d.pipeline.proposed ? '<div class="pipeline-seg proposed" style="flex:' + d.pipeline.proposed + '" title="Proposed: ' + d.pipeline.proposed + '">' + d.pipeline.proposed + '</div>' : '',
+          d.pipeline.l1 ? '<div class="pipeline-seg l1" style="flex:' + d.pipeline.l1 + '" title="L1: ' + d.pipeline.l1 + '">' + d.pipeline.l1 + '</div>' : '',
+          d.pipeline.l2ci ? '<div class="pipeline-seg l2ci" style="flex:' + d.pipeline.l2ci + '" title="L2/CI: ' + d.pipeline.l2ci + '">' + d.pipeline.l2ci + '</div>' : '',
+          d.pipeline.allocated ? '<div class="pipeline-seg allocated" style="flex:' + d.pipeline.allocated + '" title="Allocated: ' + d.pipeline.allocated + '">' + d.pipeline.allocated + '</div>' : ''
+        ].join('');
+    html += '<div class="demand-row" data-idx="' + idx + '" onclick="toggleRow(' + idx + ')">'
+      + '<div class="id-jr">' + d.id + '</div>'
+      + '<div class="id-rr"><span class="id-rr-label">RR:</span>' + d.rrId + '</div>'
+      + '<div><div class="demand-role">' + d.role + '</div><div class="demand-skills">' + d.skills + '</div></div>'
+      + '<div><span class="demand-type type-' + d.type.toLowerCase() + '">' + d.type + '</span></div>'
+      + '<div class="pipeline-bar">' + segs + '</div>'
+      + '<div class="age-cell ' + d.ageClass + '">' + d.age + 'd</div>'
+      + '<div class="row-arrow">▶</div>'
+      + '</div>'
+      + '<div class="drilldown" id="drill-' + idx + '">' + renderDrilldown(d) + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderDrilldown(d) {
+  const detailsHTML = '<div class="drill-section"><div class="drill-label">Demand Details · ' + d.id + ' &nbsp; (RR: ' + d.rrId + ')</div><div class="demand-details">'
+    + '<div class="demand-detail-cell"><div class="demand-detail-label">Practice Unit</div><div class="demand-detail-value">' + d.pu + '</div></div>'
+    + '<div class="demand-detail-cell"><div class="demand-detail-label">Delivery Unit</div><div class="demand-detail-value">' + d.du + '</div></div>'
+    + '<div class="demand-detail-cell"><div class="demand-detail-label">Position</div><div class="demand-detail-value">' + d.positions + '</div></div>'
+    + '<div class="demand-detail-cell"><div class="demand-detail-label">Type</div><div class="demand-detail-value" style="color:' + (d.type === 'Proactive' ? 'var(--green)' : 'var(--red)') + '">' + d.type + '</div></div>'
+    + '</div></div>';
+
+  const pipelineHTML = '<div class="drill-section"><div class="drill-label">Candidate Pipeline · ' + d.id + '</div><div class="jr-pipeline">'
+    + '<div class="jr-stage proposed"><div class="jr-stage-label">1 · Proposed</div><div class="jr-stage-count">' + d.pipeline.proposed + '<span class="unit">candidates</span></div></div>'
+    + '<div class="jr-stage l1"><div class="jr-stage-label">2 · L1 Cleared</div><div class="jr-stage-count">' + d.pipeline.l1 + '<span class="unit">candidates</span></div></div>'
+    + '<div class="jr-stage l2ci"><div class="jr-stage-label">3 · L2 / CI Cleared</div><div class="jr-stage-count">' + d.pipeline.l2ci + '<span class="unit">candidates</span></div></div>'
+    + '<div class="jr-stage allocated"><div class="jr-stage-label">4 · Allocated</div><div class="jr-stage-count">' + d.pipeline.allocated + '<span class="unit">candidate' + (d.pipeline.allocated === 1 ? '' : 's') + '</span></div></div>'
+    + '</div></div>';
+
+  let candHTML;
+  if (d.candidates.length > 0) {
+    candHTML = '<div class="drill-section"><div class="drill-label">Candidates in Pipeline (' + d.candidates.length + ')</div><table class="cand-table"><thead><tr><th>Candidate</th><th>Source</th><th>Stage</th><th>Joining ETA</th><th>Notes</th></tr></thead><tbody>'
+      + d.candidates.map(c => '<tr><td><div class="cand-name">' + c.name + '</div></td><td><span class="cand-source">' + c.source + '</span></td><td><span class="stage-pill stage-' + c.stage + '">' + c.stageLabel + '</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:10.5px;color:var(--text2)">' + c.joinedDt + '</td><td style="color:var(--text2);font-size:11px">' + c.note + '</td></tr>').join('')
+      + '</tbody></table></div>';
+  } else {
+    candHTML = '<div class="drill-section"><div class="drill-label">Candidates in Pipeline</div><div style="color:var(--text3);font-size:11.5px;padding:12px;background:var(--surface2);border-radius:8px;text-align:center">No candidates sourced yet · TA team has been notified</div></div>';
+  }
+
+  const toolbarHTML = '<div class="edit-toolbar"><button class="toolbar-btn primary">+ Add Candidate</button><button class="toolbar-btn">✎ Update Status</button><button class="toolbar-btn">⚑ Flag for Review</button></div>';
+
+  let commentsInner;
+  if (d.comments.length === 0) {
+    commentsInner = '<div style="color:var(--text3);font-size:11px;text-align:center;padding:12px">No comments yet · Start the conversation</div>';
+  } else {
+    commentsInner = d.comments.map(c => '<div class="comment"><div class="avatar ' + c.role + '">' + c.author.split(' ').map(n => n[0]).join('').slice(0,2) + '</div><div class="comment-body"><div class="comment-meta"><span class="name">' + c.author + '</span><span class="role-tag ' + c.role + '">' + c.role + '</span><span class="time">' + c.time + '</span></div><div class="comment-text">' + c.text + '</div></div></div>').join('');
+  }
+  const commentsHTML = '<div><div class="drill-label">Comments &amp; Updates</div><div class="comments-feed">' + commentsInner + '<div class="comment-input-row"><input class="comment-input" placeholder="Add an update or question…" /><button class="send-btn">Post</button></div></div></div>';
+
+  return detailsHTML + pipelineHTML + '<div style="display:grid;grid-template-columns:1fr 360px;gap:24px"><div>' + candHTML + toolbarHTML + '</div>' + commentsHTML + '</div>';
+}
+
+function toggleRow(idx) {
+  const row = document.querySelector('.demand-row[data-idx="' + idx + '"]');
+  if (!row) return;
+  const drill = document.getElementById('drill-' + idx);
+  const isOpen = row.classList.contains('expanded');
+  document.querySelectorAll('.demand-row.expanded').forEach(r => r.classList.remove('expanded'));
+  document.querySelectorAll('.drilldown').forEach(d => d.style.display = 'none');
+  if (!isOpen) {
+    row.classList.add('expanded');
+    if (drill) drill.style.display = 'block';
+  }
+}
+
+// Update KPI counts based on actual data
+document.getElementById('kpiTotal').innerHTML = demands.length + '<span class="unit">total</span>';
+const aging60 = demands.filter(d => d.age > 60).length;
+document.getElementById('kpiAging').innerHTML = aging60 + '<span class="unit">demands</span>';
+const atRisk = demands.filter(d => d.age > 45).length;
+document.getElementById('kpiAtRisk').innerHTML = atRisk + '<span class="unit">demands</span>';
+
+populateFilters();
+applyFilters();
+renderPipelineChart();
+</script>
+</body>
+</html>
